@@ -1,0 +1,17 @@
+parse_CV_extract_information_task:
+
+description: >
+Understand different CV format and identify the key information required to match it with the job role. Read through the entire CV and extract the information in the expected output. 
+
+expected_output: >
+A file with the candidate name in the front and in the format of CV_extrcation_format.
+
+CV_extrcation_format:
+{CV_extrcation_format}
+
+match_and_score_candidate_task:
+
+description: > 
+Evaluate the extracted 
+
+
