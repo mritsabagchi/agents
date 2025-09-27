@@ -1,13 +1,20 @@
 # parse_CV_extract_information_task:
 
-# description: >
-# Understand different CV format and identify the key information required to match it with the job role. Read through the entire CV and extract the information in the expected output. 
+#   description: >
+#     Understand different CV format and identify the key information required to match it with the job role. Read through the entire CV and extract the information in the expected output. 
 
-# expected_output: >
-# A file with the candidate name in the front and in the format of CV_extrcation_format.
+#   expected_output: >
+#     A file with the candidate name in the front and in the format of CV_extrcation_format.
 
-# CV_extrcation_format:
-# {CV_extrcation_format}
+#   output_json: >
+
+#     name:
+#     location:
+#     qualification:
+#     year_of_experient:
+#     techical Skill:
+#     behavorial_skills:
+
 
 match_and_score_candidate_task:
 
@@ -20,20 +27,40 @@ match_and_score_candidate_task:
   Job Requirements:
   {job_requirements}
 
+  agent: recruiter
+
   expected_output: >
-    A ranked list of candidates with detailed scores and justification for each job position evaluation.
+    A ranked list of candidates with detailed scores and justification for each job position evaluation. Write an output file with the job name 
+
+  output_json: >
+
+    Name:
+    Position:
+    Total_Score:
+
+  output_file: document/eveluation_report/{job_description}_1_round.json
+
 
 interview_the_candidate_task:
+
   description: >
-    Ask questions relevant to the job role based on the job requirements. Wait for the user response, if the answer does match well with the context of the question ask further question on the same topic. 
+    Based on the each required skills of job description ask questions relevant to the job role. The quetions should be short and precise.  Wait for the user response, if the answer does match well with the context of the question ask further question on the same topic. 
     
     Example:
 
-    If the question related to finding duplicate for SQL 
-    Candidate: I will 
-    
+    If the question related to 'finding duplicate for SQL'
 
+    candidate: I will run group by on one column and then find the count>1
 
+    interviwer: Which columns will you choose for grouping? What are the other possible ways you can solve this problem?
+
+  guardrail: >
+
+    Number of question asked by the interviwer should not be more than 2 on a particular topic. 
+
+    If the candidate takes longer than 3 mins to answer a question you tell "sorry we need to move to the next question keeping time in mind".
+
+  agent: interviwer
 
 
 
