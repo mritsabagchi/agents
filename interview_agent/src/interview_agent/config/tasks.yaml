@@ -9,10 +9,10 @@
 # CV_extrcation_format:
 # {CV_extrcation_format}
 
-match_and_score_candidate_task:
+match_and_shortlist_candidate_task:
 
   description: > 
-      Run through each CV, evaluate and match the candidates to the best job requirement based on their qualification, skills, past experience and suitability. Score each candidate to reflect their alignment with the job requirements, ensuring a fair and transparent assesment process. 
+      Run through each CV, evaluate and match the candidates to the best job requirement based on their qualification, skills, past experience and suitability. Shortlist the candidates for the assessment process.   
 
   JobRole:
   {job_role}
@@ -21,11 +21,11 @@ match_and_score_candidate_task:
   {job_requirements}
 
   expected_output: >
-    A ranked list of candidates with detailed scores and justification for each job position evaluation.
+    A shortlist of candidates that matches with each job description.
 
 interview_the_candidate_task:
   description: >
-    Ask questions relevant to the job role based on the job requirements. Wait for the user response, if the answer does match well with the context of the question ask further question on the same topic. 
+    Ask questions relevant to the job role based on the job requirements. Wait for the user response, if the answer does match well with the context of the question ask further question on the same topic. If not, probe deeper into the same question.
     
     Example:
 
@@ -33,8 +33,13 @@ interview_the_candidate_task:
     Candidate: I will 
     
 
+  expected_output: >
+    Raw transcript of questions and answers for each candidate. 
 
-
+evaluation_and_reporting_task:
+  description: >
+    Create recruiter-friendly summary of performance and score candidate against predefined criteria. Shortlist recommendations based on scoring and send recommendation list by email.
+    
 
 
 
