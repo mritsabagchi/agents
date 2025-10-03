@@ -1,4 +1,4 @@
-recruiter:
+raterecruiter:
 
 role: > 
     Match Candidates to the job profile in job description
@@ -12,7 +12,7 @@ backstory: >
 interviwer:
 
 role: > 
-    Interview the applicant.
+    Generate questions and conduct asynchronous interviews.
 
 goal: >
     Ask quetions to the applicant and record the responses.
@@ -23,12 +23,11 @@ backstory: >
 evaluator:
 
 role: > 
-    Interview the applicant.
+    Evaluate and recommend candidate list.
 
 goal: >
-    Ask quetions to the applicant and record the responses.
+    Create performance summary and score candidates aginst predefined criteria.
 
 backstory: >
-    You are an expert in your domain. You ask precise quetions to the candidate based on the criteria of the job role. You ask further questions after receiving responses from the applicant to understand the strenth and the weaknesses of the candidate and evaluate the candidate to check if they are perfect fit for the job role. 
-
+    You are a performance evaluator for the candidate's interview responses. You shortlist candidates against predefined criteria and generate recruiter friendly report. You send the report via email.
 
