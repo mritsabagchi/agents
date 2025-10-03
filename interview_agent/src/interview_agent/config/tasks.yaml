@@ -1,25 +1,47 @@
-# parse_CV_extract_information_task:
+parse_CV_extract_information_task:
 
-#   description: >
-#     Understand different CV format and identify the key information required to match it with the job role. Read through the entire CV and extract the information in the expected output. 
+  description: >
+    Parse the provided raw CV text to identify and extract key candidate information. 
+    Accurately identify all relevant details and structure them into a clean JSON output.
 
-#   expected_output: >
-#     A file with the candidate name in the front and in the format of CV_extrcation_format.
+  
+  agent: recruiter_agent
 
-#   output_json: >
-
-#     name:
-#     location:
-#     qualification:
-#     year_of_experient:
-#     techical Skill:
-#     behavorial_skills:
+  expected_output: >
+    A nested JSON object containing the extracted of all the candidate information in one file with the file name as documents/{job_desciprtion}_candidates.txt. 
+    The JSON must strictly adhere to the following schema:
+    {
+      "candidate_profile": {
+        "name": "string",
+        "location": "string",
+        "email": "string",
+        "phone": "string"
+      },
+      "professional_summary": {
+        "experience_years": "integer",
+        "summary_text": "string (a brief 2-4 sentence summary from the CV)"
+      },
+      "qualifications": [
+        {
+          "degree": "string",
+          "institution": "string",
+          "graduation_year": "integer"
+        }
+      ],
+      "skills": {
+        "technical": ["list", "of", "strings"],
+        "behavioral": ["list", "of", "strings"]
+      }
+      }
 
 
 match_and_score_candidate_task:
 
   description: > 
-      Run through each CV, evaluate and match the candidates to the best job requirement based on their qualification, skills, past experience and suitability. Score each candidate to reflect their alignment with the job requirements, ensuring a fair and transparent assesment process. 
+    Evaluate a candidate's extracted CV information against the specific job requirements.
+    Provide a quantitative score from 0-100 reflecting their alignment with the role.
+    This score must be supported by a concise, evidence-based justification highlighting
+    the candidate's key strengths and weaknesses for this position. 
 
   JobRole:
   {job_role}
@@ -27,16 +49,21 @@ match_and_score_candidate_task:
   Job Requirements:
   {job_requirements}
 
-  agent: recruiter
+  agent: recruiter_agent
 
+
+  output_file: 'reports/evaluations/{candidate_name}_{job_role}.json'
+
+      
   expected_output: >
-    A ranked list of candidates with detailed scores and justification for each job position evaluation. Write an output file with the job name 
-
-  output_json: >
-
-    Name:
-    Position:
-    Total_Score:
+    A single file with multiple JSON object containing each candidate's name, their calculated score,
+    and a clear justification. The JSON must strictly adhere to the following schema:
+    {
+      "candidate_name": "string",
+      "position_evaluated": "string",
+      "score": "integer (0-100)",
+      "justification": "string (2-3 sentences)"
+    }
 
   output_file: document/eveluation_report/{job_description}_1_round.json
 
@@ -44,23 +71,22 @@ match_and_score_candidate_task:
 interview_the_candidate_task:
 
   description: >
-    Based on the each required skills of job description ask questions relevant to the job role. The quetions should be short and precise.  Wait for the user response, if the answer does match well with the context of the question ask further question on the same topic. 
-    
-    Example:
+    Act as an expert interviewer. Your goal is to generate the single best question to ask next.
+    1. Analyze the static context: the {job_requirements} and the candidates' CV data ({candidates_data}).
+    2. Critically review the dynamic context: the entire {chat_history} of the interview so far.
+    3. Based on their last answer and overall context, formulate a logical an insightful follow-up question.
+    4. The question should be concise, precise and designed to probe their skills and experience.
+    5. Do not repeat questions or add conversational fillers (e.g., "Great, thanks for that answer.").
 
-    If the question related to 'finding duplicate for SQL'
 
-    candidate: I will run group by on one column and then find the count>1
+#  Removed Application Logic: The "guardrails" (like the 3-minute timer and 2-question limit) have been removed. This is critical. An LLM agent cannot manage real-time clocks or count questions across multiple turns. This logic belongs in your backend server code (e.g., the FastAPI Python script). Your application code should track the time and question count, deciding when to move on or end the topic.
+  # guardrail: >
 
-    interviwer: Which columns will you choose for grouping? What are the other possible ways you can solve this problem?
+  #   Number of question asked by the interviwer should not be more than 2 on a particular topic. 
 
-  guardrail: >
+  #   If the candidate takes longer than 3 mins to answer a question you tell "sorry we need to move to the next question keeping time in mind".
 
-    Number of question asked by the interviwer should not be more than 2 on a particular topic. 
-
-    If the candidate takes longer than 3 mins to answer a question you tell "sorry we need to move to the next question keeping time in mind".
-
-  agent: interviwer
+  agent: interviwer_agent
 
 
 
