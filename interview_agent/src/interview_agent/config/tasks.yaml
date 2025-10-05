@@ -31,8 +31,16 @@ interview_the_candidate_task:
 
     If the question related to finding duplicate for SQL 
     Candidate: I will 
-    
 
+  ShortlistedCandidate:
+  {candidate_shortlist}
+
+  EvaluationCriteria:
+  {skills}{must_have}{role_context}
+
+  CandidateResponse:
+  {candidate_response}
+  
   expected_output: >
     Raw transcript of questions and answers for each candidate. 
 
@@ -40,6 +48,8 @@ evaluation_and_reporting_task:
   description: >
     Create recruiter-friendly summary of performance and score candidate against predefined criteria. Shortlist recommendations based on scoring and send recommendation list by email.
     
+CandidateTranscript:
+  {interview_transcript}
 
-
-
+ expected_output: >
+    Summary report with ranked shortlisted recommendation list. Email report.
