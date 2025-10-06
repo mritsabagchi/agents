@@ -1,7 +1,7 @@
 import os
 from dotenv import loadenv
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+# from fastapi import FastAPI
+# from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from crewai import Agent, Tasks, Crew
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -62,7 +62,7 @@ try:
 
     agents_config = load_yaml_config('agents.yaml')
     tasks_config = load_yaml_config('tasks.yaml')
-    
+
 except FileNotFoundError:
     raise RuntimeError("agents.yaml and tasks,yaml not found. Please ensure they are in the same directory")
 
