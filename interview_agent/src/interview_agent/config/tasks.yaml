@@ -88,6 +88,8 @@ interview_the_candidate_task:
 
   agent: interviwer_agent
 
+  expected_output: > 
+    simple interview questions related to the context of the job on the job interview application
 
 
 

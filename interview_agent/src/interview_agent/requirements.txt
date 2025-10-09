@@ -1,0 +1,16 @@
+FastAPI and Server
+fastapi
+uvicorn[standard]
+
+CrewAI and AI Model Connector
+crewai
+langchain-google-genai
+
+Frontend UI
+streamlit
+
+Utility Libraries
+python-dotenv
+PyYAML
+requests
+
