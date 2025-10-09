@@ -2,35 +2,89 @@ import streamlit as st
 import requests
 import json
 
-# --- Page Configuration ---
-st.set_page_config(
-    page_title = "AI Interview Chatbot"
-    layout= "wide",
-    initial_sidebar_state="expanded"
-)
+# URL of your running FastAPI backend
+BACKEND_URL = "http://127.0.0.1:8000"
 
-#----------- Constants -------------
-BACKEND_URL = "https://127.0.0.1:8000" # URL of your running FastAPI backened
+st.title("AI Interview Chatbot 🤖")
 
-#----- Session State Initialization ----------
-# This is crucial for maintaining the conversation state acrosss user interactions.
-if "chat_history" not in st.session_state:
+# Initialize chat history in session state if it doesn't exist
+if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
     st.session_state.interview_started = False
-    st.session_state.analysis = None #Not required
-    st.session_state.job_reqs = " " #Needs to be taken from the main job requirement
 
-#-------- Helper Functions ----------
-def clean_json_response(response_text: str):
-    """" Helper to clean and parse JSON that might be in a markdown block. """
-    try:
-        # Find the start and end of JSON block
-        json_start = response_text.find('```json') + len('```json\n')
-        json_end = response_text.rfind('```')
-
-        if json_start > -1 and json_end > -1:
-            json_part = response_text[json_start:json_end].strip()
-            return json.loads(json_part)
+# --- Sidebar for Job Description ---
+with st.sidebar:
+    st.header("Job Details")
+    job_reqs = st.text_area("Paste the Job Requirements here:", height=200)
+    
+    if st.button("Start Interview") and job_reqs:
+        # Call the /start_interview endpoint
+        response = requests.post(f"{BACKEND_URL}/start_interview", json={"job_requirements": job_reqs})
+        if response.status_code == 200:
+            first_question = response.json().get("question")
+            st.session_state.chat_history.append({"role": "assistant", "content": first_question})
+            st.session_state.interview_started = True
         else:
-            # If no markdown block, try parsing the whole string
-            return json.loads(json_part)    
+            st.error("Failed to start the interview. Is the backend running?")
+    
+    if st.session_state.interview_started:
+        if st.button("Finish & Analyze Interview"):
+            # Create the full transcript string
+            transcript = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state.chat_history])
+            
+            # Call the /analyze_interview endpoint
+            payload = {"job_requirements": job_reqs, "interview_transcript": transcript}
+            with st.spinner("Analyzing performance..."):
+                response = requests.post(f"{BACKEND_URL}/analyze_interview", json=payload)
+                if response.status_code == 200:
+                    analysis = response.json().get("analysis")
+                    st.session_state.analysis = analysis # Store analysis
+                else:
+                    st.error("Failed to get analysis.")
+
+# --- Main Chat Interface ---
+if st.session_state.interview_started:
+    # Display chat messages
+    for message in st.session_state.chat_history:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # User input
+    if user_answer := st.chat_input("Your answer..."):
+        # Add user answer to history and display it
+        st.session_state.chat_history.append({"role": "user", "content": user_answer})
+        with st.chat_message("user"):
+            st.markdown(user_answer)
+
+        # Get the next question from the backend
+        transcript = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state.chat_history])
+        payload = {"job_requirements": job_reqs, "chat_history": transcript}
+        
+        with st.spinner("Thinking..."):
+            response = requests.post(f"{BACKEND_URL}/next_question", json=payload)
+            if response.status_code == 200:
+                next_question = response.json().get("question")
+                st.session_state.chat_history.append({"role": "assistant", "content": next_question})
+                # Rerun the script to display the new question
+                st.experimental_rerun()
+            else:
+                st.error("Failed to get the next question.")
+
+# --- Display Final Analysis ---
+if 'analysis' in st.session_state:
+    st.header("Interview Analysis Report")
+    report = st.session_state.analysis
+    st.subheader("Overall Summary")
+    st.write(report.get("summary", "N/A"))
+
+    st.subheader("Key Strengths")
+    for strength in report.get("strengths", []):
+        st.markdown(f"- {strength}")
+
+    st.subheader("Areas for Improvement")
+    for weakness in report.get("weaknesses", []):
+        st.markdown(f"- {weakness}")
+    
+    st.subheader("Final Score")
+    st.progress(report.get("final_score", 0) / 100)
+    st.markdown(f"**{report.get('final_score', 0)} / 100**")
