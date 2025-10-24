@@ -1,0 +1,63 @@
+# pyproject.toml
+
+# Defines the build system for the project.
+# This tells tools like pip how to build your project from source.
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+# Contains the main metadata for your project.
+[project]
+name = "interview-agent"
+version = "0.1.0"
+description = "A project using CrewAI with a FastAPI backend and Streamlit frontend."
+readme = "README.md"
+requires-python = ">=3.10, <3.14"
+authors = [
+  { name="Ria Chaudhuri", email="ria.chaudhuri1989@gmail.com" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+# Lists all the required packages for your project to run.
+dependencies = [
+    # FastAPI and Server
+    "fastapi",
+    "uvicorn[standard]",
+
+    # CrewAI and AI Model Connector
+    "crewai",
+    "langchain-google-genai",
+
+    # Frontend UI
+    "streamlit",
+
+    # Utility Libraries
+    "python-dotenv",
+    "PyYAML",
+    "requests",
+]
+
+# Tells setuptools where to find the project's source code.
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# pyproject.toml
+
+[tool.ruff]
+# Set the maximum line length
+line-length = 88
+
+[tool.ruff.lint]
+# Select a base set of rules to check for
+select = ["E", "F", "W", "I"]
+
+[tool.ruff.format]
+# Enable the formatter
+quote-style = "double"
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.14.0"
+

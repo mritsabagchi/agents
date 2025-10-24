@@ -1,0 +1,1 @@
+Interviewer: Can you describe your experience with AWS? Jane: I have used S3, EC2, and Lambda for deploying and managing applications. Interviewer: How do you handle code reviews? Jane: I believe in constructive feedback and use a pull-request-based workflow.

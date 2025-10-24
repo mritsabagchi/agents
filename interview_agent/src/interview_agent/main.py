@@ -1,72 +1,99 @@
 import os
-from dotenv import loadenv
-# from fastapi import FastAPI
-# from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from crewai import Agent, Tasks, Crew
+from dotenv import load_dotenv
+import yaml
+from crewai import LLM,Agent, Task
 from langchain_google_genai import ChatGoogleGenerativeAI
+from fastapi import FastAPI
 
-#Import API Key
-load_dotenv()
+# --- Load Environment Variables ---
+# This will automatically search for and load the .env file in your project's
+# root directory. This is the standard and most reliable way to use the library.
+# load_dotenv()
 
-# 1. Initialize Language Model(LLM)
+# --- Language Model Configuration ---
+# Initialize the Google Generative AI model.
+# This will be the brain of your agents.
+# It now safely accesses the GOOGLE_API_KEY loaded from the .env file.
+# api_key = os.getenv("GOOGLE_API_KEY")
+# if not api_key:
+#     raise ValueError(
+#         "GOOGLE_API_KEY not found. Make sure it's set correctly in your .env file."
+    # )
 
-llm=ChatGoogleGenerativeAI(
-    model="gemini-pro"
-    verbose=True
-    temparature=0.7
-    google_api_key=os.environ.get("GOOGLE_API_KEY")
-    )
+# For LLM endpoint connection
+# llm = ChatGoogleGenerativeAI(
+#     model="gemini-pro", verbose=True, temperature=0.7, google_api_key=api_key
+# )
 
-# 2. ----Pydantic Models for API Request Validation----
-# Defines the structure of the data and the API expects for each endpoint.
+# For internal testing 
+llm = LLM(
+    model="ollama/llama3",
+    base_url="http://localhost:11434"
+)
 
-class InterviewRequest(BaseModel):
-    job_file_name: str
-    chat_history: str = " "
 
-class AnalysisRequest(BaseModel):
-    job_file_name: str
-    interview_transcript: str
-
-# 3. YAML Loading Utility
-def load_yaml_config(filepath:str):
-    """ Loads a YAML file and returns its content. """
-    with open(filepath, 'r') as file:
+app = FastAPI()  
+# --- Function to Load YAML Configuration ---
+def load_yaml_config(filepath):
+    """Loads a YAML file and returns its content."""
+    with open(filepath, "r") as file:
         return yaml.safe_load(file)
-    
 
 
-
-# 3. Setup FastAPI web server
-app = FastAPI(
-    title= "CrewAI Chatbot Backend"
-    description= "A server that uses CrewAI to power an interview chatbot."
-)
-
-# Adds CORS middleware to allow requests from any origin
-# This is crucial for connecting a web-based frontend
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # For development, allows all origins.
-    # For production, you would restrict this to your Streamlit app's actual domain.
-    # allow_origins=["http://localhost:8501", "https://your-deployed-app.com"],
-    allow_credentials=["*"],
-    allow_medhod=["*"],
-    allow_headers=["*"]  # Allows all headers
-)
-
-#---- 4. AI Model and Agent Initialization ----
+# --- Load Agent and Task Definitions ---
+# These files define the roles, goals, and instructions for your agents and tasks.
 try:
+    # Construct paths relative to the current file
+    current_dir = os.path.dirname(__file__)
+    agents_config_path = os.path.join(current_dir, "config", "agents.yaml")
+    tasks_config_path = os.path.join(current_dir, "config", "tasks.yaml")
 
-    agents_config = load_yaml_config('agents.yaml')
-    tasks_config = load_yaml_config('tasks.yaml')
+    agents_config = load_yaml_config(agents_config_path)
+    tasks_config = load_yaml_config(tasks_config_path)
+except FileNotFoundError as e:
+    print(f"Error: Configuration file not found - {e}")
+    agents_config = {}
+    tasks_config = {}
+except Exception as e:
+    print(f"An error occurred while loading configuration files: {e}")
+    agents_config = {}
+    tasks_config = {}
 
-except FileNotFoundError:
-    raise RuntimeError("agents.yaml and tasks,yaml not found. Please ensure they are in the same directory")
+
+# --- Function to Create Agents from Config ---
+def create_agents(config, llm_model):
+    """Creates a dictionary of CrewAI Agent objects from a configuration dictionary."""
+    agents = {}
+    if "agents" in config:
+        for agent_info in config["agents"]:
+            agents[agent_info["role"]] = Agent(
+                role=agent_info["role"],
+                goal=agent_info["goal"],
+                backstory=agent_info["backstory"],
+                verbose=True,
+                allow_delegation=False,
+                llm=llm_model,
+            )
+    return agents
 
 
-#-------API Endpoints-------
-@app.post("/start_interview")
-async def start_interview(request: InterviewRequest):
+# --- Function to Create Tasks from Config ---
+def create_tasks(config, agent_map, context_inputs):
+    """Creates a list of CrewAI Task objects from a configuration dictionary."""
+    tasks = []
+    if "tasks" in config:
+        for task_info in config["tasks"]:
+            # Find the agent object from the map using the role name
+            task_agent = agent_map.get(task_info["agent"])
+            if task_agent:
+                # Format the description with context inputs
+                description = task_info["description"].format(**context_inputs)
+
+                tasks.append(
+                    Task(
+                        description=description,
+                        expected_output=task_info["expected_output"],
+                        agent=task_agent,
+                    )
+                )
+    return tasks
